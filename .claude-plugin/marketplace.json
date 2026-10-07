@@ -1,7 +1,7 @@
 {
   "name": "attila-modding",
   "description": "Plugins for modding Total War: Attila and The Dawnless Days",
-  "owner": { "name": "Attila modding toolkit" },
+  "owner": { "name": "Mr.Jox aka victimized" },
   "plugins": [
     {
       "name": "attila-toolkit",
