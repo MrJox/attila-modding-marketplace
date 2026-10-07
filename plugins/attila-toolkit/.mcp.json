@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "rpfm": {
+      "command": "python",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/rpfm_bridge.py"],
+      "env": {
+        "ATTILA_DIR": "${user_config.attila_dir}",
+        "RPFM_DIR": "${user_config.rpfm_dir}",
+        "RPFM_AUTOSTART": "${user_config.rpfm_autostart}"
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "attila-toolkit",
+  "displayName": "Total War: Attila Modding Toolkit",
+  "version": "1.0.0",
+  "description": "Total War: Attila modding: RPFM pack editing through rpfm_server's MCP (auto-started), DB/loc/Lua/startpos knowledge, audits for campaign events, AI and battle tiles, crash-dump analysis, file format specs and the engine type header.",
+  "author": { "name": "Attila modding toolkit" },
+  "license": "MIT",
+  "keywords": ["total-war", "attila", "rpfm", "modding", "tdd", "dawnless-days"],
+  "userConfig": {
+    "attila_dir": {
+      "type": "directory",
+      "title": "Total War: ATTILA folder",
+      "description": "The folder that holds Attila.exe and the data folder. Leave blank to auto-detect it from your Steam libraries."
+    },
+    "rpfm_dir": {
+      "type": "directory",
+      "title": "RPFM folder",
+      "description": "The folder that holds rpfm_cli and rpfm_server (RPFM 4.x release). Leave blank to auto-detect (PATH, Downloads, Desktop, Program Files ...)."
+    },
+    "work_dir": {
+      "type": "directory",
+      "title": "Work folder (optional)",
+      "description": "Short folder for extracted packs and reports. Keep the path short (Windows MAX_PATH). Blank = a folder named attila_work in the system temp area."
+    },
+    "mod_packs": {
+      "type": "string",
+      "title": "Mod packs to analyse (optional)",
+      "description": "Semicolon-separated pack file names from the game's data folder that the audit scripts treat as your mod, e.g. my_mod.pack;my_mod_text.pack. Blank = the enabled tdd_pack*.pack files (The Dawnless Days)."
+    },
+    "rpfm_autostart": {
+      "type": "boolean",
+      "title": "Start rpfm_server automatically",
+      "description": "Launch rpfm_server in the background when the RPFM MCP is used, and stop it when the last session ends (only if the toolkit started it).",
+      "default": true
+    }
+  }
+}
