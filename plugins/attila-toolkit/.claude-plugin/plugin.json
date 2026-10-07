@@ -1,7 +1,7 @@
 {
   "name": "attila-toolkit",
   "displayName": "Total War: Attila Modding Toolkit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Total War: Attila modding: RPFM pack editing through rpfm_server's MCP (auto-started), DB/loc/Lua/startpos knowledge, audits for campaign events, AI and battle tiles, crash-dump analysis, file format specs and the engine type header.",
   "author": { "name": "Mr.Jox aka victimized" },
   "license": "MIT",

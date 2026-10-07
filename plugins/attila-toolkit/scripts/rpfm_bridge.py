@@ -29,7 +29,33 @@ def log(*a):
     print("[rpfm-bridge]", *a, file=sys.stderr, flush=True)
 
 
+MAX_TEXT = int(__import__("os").environ.get("RPFM_BRIDGE_MAX_CHARS", "60000"))
+_big_counter = [0]
+
+
+def shrink(msg):
+    """Claude Code drops the connection on huge tool results (rebuild_dependencies returns ~25 MB).
+    Keep the head of an oversized text block and save the full payload to a file."""
+    res = msg.get("result")
+    if not isinstance(res, dict) or not isinstance(res.get("content"), list):
+        return msg
+    for c in res["content"]:
+        t = c.get("text") if isinstance(c, dict) else None
+        if isinstance(t, str) and len(t) > MAX_TEXT:
+            import os
+            d = os.path.join(tc.STATE_DIR, "large_results")
+            os.makedirs(d, exist_ok=True)
+            _big_counter[0] += 1
+            path = os.path.join(d, "result_%d_%d.json" % (os.getpid(), _big_counter[0]))
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(t)
+            c["text"] = (t[:MAX_TEXT // 4] + "\n... [truncated by the toolkit bridge: %d of %d characters shown; "
+                         "full result saved to %s]" % (MAX_TEXT // 4, len(t), path))
+    return msg
+
+
 def emit(msg):
+    msg = shrink(msg)
     data = json.dumps(msg, separators=(",", ":")).encode("utf-8") + b"\n"
     with _out_lock:
         sys.stdout.buffer.write(data)

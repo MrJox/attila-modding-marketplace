@@ -22,7 +22,7 @@ If the `rpfm` tools are not in the tool list: run `python "<plugin>/scripts/rpfm
 State lives per MCP session, so after a reconnect or `/rpfm-server start` do this again:
 
 1. `set_game_selected {"game_name":"attila","rebuild_dependencies":false}`
-2. `rebuild_dependencies {"value":false}` loads the existing dependency cache (vanilla data, Assembly Kit tables) in about a second.
+2. `rebuild_dependencies {"value":false}` loads the existing dependency cache (vanilla data, Assembly Kit tables) in about a second. Its raw response is ~25 MB; the toolkit bridge truncates it and saves the full text under `~/.claude/attila-toolkit/large_results/` (any oversized result is handled the same way). Ignore the truncated text.
 3. `is_schema_loaded` must be `true`; if not, `update_schemas`.
 4. `get_table_list_from_dependency_pack_file` returns 28 000 characters of table names when the cache is loaded; `[]` means it is not (repeat step 2; if still empty, `generate_dependencies_cache`, which can take minutes).
 
