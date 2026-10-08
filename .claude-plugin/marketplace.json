@@ -6,7 +6,7 @@
     {
       "name": "attila-toolkit",
       "source": "./plugins/attila-toolkit",
-      "description": "RPFM pack editing through an auto-started MCP, DB/loc/Lua knowledge, campaign event / AI / battle tile audits, crash-dump analysis, file format specs and the engine type header.",
+      "description": "RPFM pack editing through an auto-started MCP, DB/loc/Lua knowledge, campaign event / AI / battle tile audits, crash-dump analysis, file format specs, the engine type header and BOB (Assembly Kit) command-line automation.",
       "category": "development",
       "keywords": ["total-war", "attila", "rpfm", "modding"]
     }

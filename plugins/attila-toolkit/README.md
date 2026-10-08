@@ -57,6 +57,7 @@ Resolution order for every path: environment variable (`ATTILA_DIR`, `RPFM_DIR`,
 | `attila-battle-terrain` | tile_map, LF height map, environment/lighting/shader formats |
 | `attila-crash-dump` | Find crash causes from `.dmp` files without WinDbg; known signatures |
 | `attila-file-formats` | Specs: `.rigid_model_v2`, `.cs2.parsed`, `.cs2`, `.anim`, `.bone_inv_trans_mats` |
+| `attila-bob-cli` | Run BOB.AssemblyKit.exe headless: command line, configuration XML, processors, rules.bob, success/failure detection, `bob_run.py` wrapper |
 | `attila-engine-header` | Query the engine's type header (`Attila.h.xz`, 330 000 types) |
 
 Not included on purpose: the full disassembly of the game (`Attila` / `kody` folders) and the game's executable. The header (`header/Attila.h.xz`) is a type library only.
