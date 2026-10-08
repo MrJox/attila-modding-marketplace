@@ -7,7 +7,7 @@ Standard library only. Windows only (BOB is a Windows GUI-subsystem exe).
     python bob_run.py status [--kit K]            is BOB running? last log summary
     python bob_run.py logs   [--kit K]            bob_error.log, bob_plugin_error.log, bob_warnings.log, bob.log tail
     python bob_run.py run    [--kit K] --processor P (--consumer E ...|--provider E ...) [...]
-    python bob_run.py scratch --dest D [--kit K] --raw REL ...    EXPERIMENTAL: copy binaries + chosen raw_data subtrees
+    python bob_run.py scratch --dest D [--kit K] --raw REL ...    copy binaries + chosen raw_data subtrees (works for Tile/Vegetation with --tile-deps)
 
 What `run` does (all of it verified, see ../SKILL.md): writes <kit>/binaries/BOB/<name>_configuration.xml,
 starts `BOB.AssemblyKit.exe /dont_stop_on_error /configuration:<name> /offline` with cwd <kit>/binaries,
@@ -301,7 +301,7 @@ def cmd_run(args):
 
 
 def cmd_scratch(args):
-    """EXPERIMENTAL / unverified against a real oracle run: a throw-away kit for comparing outputs without
+    """A throw-away kit (verified with the Tile and Vegetation processors, --tile-deps) for comparing outputs without
     touching the real kit. Copies binaries/ (minus logs and BOB/*.xml), the listed raw_data subtrees and every
     rules.bob on their way up."""
     import shutil
@@ -314,6 +314,17 @@ def cmd_scratch(args):
                     ignore=lambda d, names: [n for n in names if n in skip])
     for sub in ("working_data", "retail"):
         os.makedirs(os.path.join(dest, sub), exist_ok=True)
+    if args.tile_deps:
+        # what the Tile/Vegetation processors need besides the tile itself (verified: BOB exits 1 with empty
+        # logs without raw_data/db; max_grass.xml is needed by Vegetation)
+        args.raw = list(args.raw) + ["db", "EmpireDesignData", "terrain/tiles/battle/_tile_database"]
+        for rel in ("rules.bob", "terrain/vegetation", "BattleTerrain"):
+            src = os.path.join(kit, "working_data", rel)
+            dst = os.path.join(dest, "working_data", rel)
+            if os.path.isdir(src):
+                shutil.copytree(src, dst, dirs_exist_ok=True)
+            elif os.path.isfile(src):
+                shutil.copy2(src, dst)
     for rel in args.raw:
         src = os.path.join(kit, "raw_data", rel)
         if not os.path.exists(src):
@@ -360,7 +371,9 @@ def main(argv=None):
     p.set_defaults(fn=cmd_run)
     p = sub.add_parser("scratch")
     p.add_argument("--dest", required=True); p.add_argument("--kit")
-    p.add_argument("--raw", action="append", required=True, help="path under raw_data to copy (repeatable)")
+    p.add_argument("--tile-deps", action="store_true",
+                   help="also copy raw_data/db (489 MB), EmpireDesignData, the tile database and working_data vegetation params")
+    p.add_argument("--raw", action="append", default=[], help="path under raw_data to copy (repeatable)")
     p.set_defaults(fn=cmd_scratch)
     args = ap.parse_args(argv)
     try:

@@ -1,6 +1,6 @@
 ---
 name: attila-bob-cli
-description: Run BOB.AssemblyKit.exe, the Total War Attila Assembly Kit batch processor, headless from the command line or a script. Covers the exact command line, the configuration XML and BOB logical paths, which processors work (Building, Pack, Cs2, Texture verified; Terrain actions seen in a real log; Tile, Vegetation, Battle, Campaign unverified), rules.bob sections, batching and timing, how to detect success or failure, and the gotchas that hang or silently no-op a run. Includes bob_run.py, a stdlib wrapper. Use when the task is to compile a CS2 building/unit/skeleton/animation/tree/texture, pack working_data into a .pack, rebuild battle or campaign tile data (tile_database.bin, tile maps, heights, vegetation), or use real BOB output as ground truth for a reimplementation.
+description: Run BOB.AssemblyKit.exe, the Total War Attila Assembly Kit batch processor, headless from the command line or a script. Covers the exact command line, the configuration XML and BOB logical paths, which processors work (Building, Pack, Cs2, Texture verified; Tile and Vegetation verified for battle tiles; Terrain actions seen in a real log; Battle, Campaign unverified), rules.bob sections, batching and timing, how to detect success or failure, and the gotchas that hang or silently no-op a run. Includes bob_run.py, a stdlib wrapper. Use when the task is to compile a CS2 building/unit/skeleton/animation/tree/texture, pack working_data into a .pack, rebuild battle or campaign tile data (tile_database.bin, tile maps, heights, vegetation), or use real BOB output as ground truth for a reimplementation.
 ---
 
 # BOB (Assembly Kit processor) from the command line
@@ -78,8 +78,8 @@ BOB.AssemblyKit.exe /dont_stop_on_error /configuration:<name> /offline
 | Skeleton, unit part, animation clip, vegetation model `.cs2` | `Cs2` | consumers | **must name the folder** | 0 | verified |
 | Textures (`.tga` to `.dds`) | `Texture` | consumers | one `<directory>` per folder | 0 | verified |
 | Battle/campaign terrain: `Terry file`, `Tilemap`, `Heights & Normals` actions | `Terrain` | **unverified** (probably the map folder `<raw>/terrain/battles/<map>/` or the `.terry`) | **unverified** | 0 | action names seen in a real log |
-| Tile (`tile.ted` to `final_*.dds`, `blend/index/normal.dds`, `hf_height_map.data`, `mesh.rigid_model_v2`, `tile_database.bin`) | `Tile` (**unverified name**) | unverified | unverified | 0 | DLL `BOB_Tile` exists |
-| Vegetation lists (`*.tree_list.bin`, `default.grass_list.bin`, `*_procedural_bmd_data.*`) | `Vegetation` (**unverified**) | unverified | unverified | 0 | DLL `BOB_Vegetation` exists |
+| Battle tile (`tile.ted` + raw maps to `tile.agf`, `blend/index/normal/ground_types.dds`, `hf_height_map.data`, `hf_water_map.data`, `mesh.rigid_model_v2`, `outfield_mesh`, `terrain_outlines.xml`) | `Tile` | consumers: the tile's raw files | `<raw>/terrain/tiles/battle/` | 0 | **verified** (see "Battle tile recipe") |
+| Vegetation (`*_procedural_bmd_data.*`, `default.grass_list.bin`; `*.tree_list.bin` not produced in the probe) | `Vegetation` | same consumers as Tile | add `<working>/terrain/vegetation/` | 0 | **verified** with Tile in one run |
 | `groupformations.bin` | `Battle` (**unverified**) | unverified | unverified | 0 | DLL `BOB_Battle` exists |
 | Campaign data (`map_data.esf`, `pathfinding.ppd`, `trade_routes.ptd`, `borders.pbd`, lookup `.tga`) | `Campaign` (**unverified**) | unverified | unverified | 0 | DLL `BOB_Campaign` exists |
 | DB export, localisation | `Database Export`, `Localisation` | `selected_files` | | 0 | config exists in `binaries_terry\BOB\` |
@@ -87,6 +87,27 @@ BOB.AssemblyKit.exe /dont_stop_on_error /configuration:<name> /offline
 Processor names that make BOB write "Couldn't create all processors" to `bob_plugin_error.log` (exit may still be 0): `Animation`, `Animations`, `RigidModelV2`, `WarscapeShared`, `ComplexAsset` (and `Building` for Cs2 work). `RigidModelV2` is a rules.bob section name, not a processor. `Cs2` with empty `<directories/>` exits 0, logs nothing and builds nothing.
 
 A real Terry run (`assembly_kit_battle_tilemap\binaries_terry\bob.log`): "3 action(s) were selected", actions `Terrain / Terry file (<map>.terry)` 4 s, `Terrain / Tilemap (<map folder>/)` 7 min (explicit, shared-geometry, exact-variation, transition, junction, masked, large tiles scan), `Terrain / Heights & Normals (<map folder>/)` 6 s. Use those as the target names when probing the Terrain processor; update this table when a probe settles it.
+
+## Battle tile recipe (verified 2026-10-08 on a scratch kit, tile `tdd_custom_dead_marshes/1x1/aa`)
+
+```
+python bob_run.py run --kit <scratch kit> --processor Tile --processor Vegetation --processor Battle \
+  --directory raw:/terrain/tiles/battle/ --directory working:/terrain/vegetation/ \
+  --consumer raw:/terrain/tiles/battle/<set>/<size>/<var>/tile.ted \
+  --consumer .../height_map_0.png --consumer .../blend_map.tif --consumer .../ground_type_map.png \
+  --consumer .../final_heights.dds --consumer .../final_alpha.dds --consumer .../protection_map.dds \
+  --consumer .../tile_normal.tga
+```
+
+15 actions in about 40 s: Tile (Create tile agf, Blendmap, Tile = TRIANGLE_MERGER mesh decimation + final heightmap rasterisation), Vegetation (Prepare, Generate Vegetation per climate, Generate Grass, Cleanup). The `Tile` processor alone with only `tile.ted` as consumer runs one action ("Create tile agf").
+
+What BOB needs in the kit (without these it exits 1 after 20 s with **empty logs** and nothing in the Windows event log):
+- `raw_data\db\` (the 489 MB DB schema, `TWaD_*.xml`) and `raw_data\EmpireDesignData\`: without them BOB dies at startup, even for a trivial Pack run.
+- `raw_data\terrain\tiles\battle\_tile_database\` (`_settings.xml`, `TILES\*.xml`) and the `rules.bob` files above the tile (`[TerrainTile] TileDatabase = terrain\tiles\battle\_tile_database`).
+- `working_data\terrain\vegetation\battle\grass\max_grass.xml` (+ its `rules.bob`) and `working_data\BattleTerrain\`: otherwise "Vegetation / Grass Generation Parameters: max_grass.xml is invalid" and exit 1.
+- Optional `custom_protection_map.png/.dds` beside the tile: its absence logs an ERROR line but the run still succeeds.
+
+Outputs land in `working_data\terrain\tiles\battle\<tile>\` (mirrors the raw path). Compared with the kit's existing output of the same tile: byte-identical for `blend/index/normal/ground_types.dds`, `hf_height_map.data`, `default.grass_list.bin`, every `*_procedural_bmd_data.bin/.xml` (except `outfield_tents_procedural_bmd_data.bin`, 4 float low bytes) and `terrain_outlines.xml`. Two runs of the same input differ **only** in `mesh.rigid_model_v2` and `outfield_mesh.rigid_model_v2` (11 bytes at offsets 222-233 of the header: uninitialised memory; mask them when diffing). `hf_water_map.data` differed from the kit's (635 vs 1281 bytes, probably a different raw state). Not produced by these processors: `*.tree_list.bin`, `building_list(.xml)`, `civilian_*.bin`, `definition.xml`, `non_terrain_outlines.xml`, `prop_marker.markers` (TEd's logic export or other actions, not yet triggered).
 
 ## rules.bob
 
@@ -131,11 +152,11 @@ Pack details: `release` gives pack type word 0x01 (what TEd loads), `mod` gives 
 
 ## Using BOB as ground truth
 
-For reimplementations (TEd/BOB replacement): build a scratch copy of only the needed inputs (`bob_run.py scratch --dest D --raw terrain/tiles/battle/<tile> ...`, **experimental**: copies `binaries` plus the listed raw subtrees and the `rules.bob` files above them; BOB may still need `_tile_database` and the map folders), run BOB there, diff the produced `working_data` against yours. Run BOB twice first to learn which bytes are non-deterministic. Never point experiments at the real kit's `working_data`.
+For reimplementations (TEd/BOB replacement): build a scratch copy of only the needed inputs (`bob_run.py scratch --dest D --tile-deps --raw terrain/tiles/battle/<set>/<size>/<var>`: copies `binaries`, the listed raw subtrees, the `rules.bob` files above them and, with `--tile-deps`, the DB schema, tile database and vegetation parameters BOB needs; ~900 MB), run BOB there, diff the produced `working_data` against yours. Run BOB twice first to learn which bytes are non-deterministic. Never point experiments at the real kit's `working_data`.
 
 ## Not yet established
 
-- Configuration and target names of the `Terrain`, `Tile`, `Vegetation`, `Battle` and `Campaign` processors (capture what TEd/Terry write into `binaries\BOB\` and the process command line during a Build, or probe with `bob_run.py run --dry-run` then a real run on a scratch kit).
+- Configuration and target names of the `Terrain`, `Battle` and `Campaign` processors, and which consumer triggers the actions that make `*.tree_list.bin`, `building_list`, `civilian_*.bin` (capture what TEd/Terry write into `binaries\BOB\` and the process command line during a Build, or probe with `bob_run.py run --dry-run` then a real run on a scratch kit).
 - What `scan_perforce=1` and other `merge_for_checkin_mode` values change.
 - Whether a case-insensitive entry match works (the add-on always used the real file name).
 - Whether packs built this way load in-game / open in TEd (type words match the game's own packs).
