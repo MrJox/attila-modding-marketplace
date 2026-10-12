@@ -3,7 +3,7 @@
 Install the Total War: Attila modding toolkit:
 
 ```bash
-claude plugin marketplace add <owner>/<repo>
+claude plugin marketplace add MrJox/attila-modding-marketplace
 claude plugin install attila-toolkit@attila-modding
 ```
 
