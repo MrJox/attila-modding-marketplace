@@ -18,6 +18,9 @@ python bob_run.py run --kit "<kit>" --processor Cs2 --directory "<raw>/art/x/" \
        --consumer "<raw>/art/x/part.cs2" --dry-run     # print the configuration first
 python bob_run.py run ...                    # same without --dry-run: prints JSON {ok, exit_code, seconds, actions_selected, problems, bob_error_log, bob_log_tail}
 python bob_run.py logs                       # bob_error.log, bob_plugin_error.log, bob_warnings.log, bob.log tail
+python bob_run.py build-tile --kit "<battle kit>" --tile terrain/tiles/battle/<set>/<size>/<variation> --scratch <folder>
+                                             # one battle tile end to end: scratch kit (created once, ~900 MB), raw tile synced in,
+                                             # Tile+Vegetation+Battle run (~40 s), outputs copied to <kit>/working_data (or --out)
 ```
 
 `<raw>/x` can also be written `raw:/x` (no angle brackets to quote in a shell). The wrapper refuses to start while BOB runs, kills BOB after `--timeout` (default 900 s), warns when `actions_selected` is 0, and reads `bob_plugin_error.log`. Exit code of the wrapper: 0 ok, 1 BOB failed, 2 usage/setup error.

@@ -346,6 +346,65 @@ def cmd_scratch(args):
     return 0
 
 
+TILE_RAW_FILES = ("tile.ted", "height_map_0.png", "blend_map.tif", "ground_type_map.png", "final_heights.dds",
+                  "final_alpha.dds", "protection_map.dds", "tile_normal.tga", "nogo.png", "lf_influence_map.png")
+
+
+def cmd_build_tile(args):
+    """Build the working data of one battle tile with real BOB in a scratch kit and copy it back.
+
+    Verified recipe (Tile + Vegetation + Battle processors, the tile's raw files as consumers, ~40 s). The scratch kit is
+    created on first use (--tile-deps: ~900 MB) and reused; the tile's raw folder is synced into it before every run so
+    the kit itself is never touched except for the output copy at the end (--out, default: the kit's working_data)."""
+    import shutil
+    kit = pick_kit(args.kit)
+    tile = args.tile.replace("\\", "/").strip("/")
+    src_raw = os.path.join(kit, "raw_data", *tile.split("/"))
+    if not os.path.isdir(src_raw):
+        raise BobError(f"{src_raw} does not exist")
+    scratch = os.path.abspath(args.scratch)
+    if not os.path.isdir(os.path.join(scratch, "binaries")):
+        ns = argparse.Namespace(kit=kit, dest=scratch, raw=[], tile_deps=True)
+        cmd_scratch(ns)
+    dst_raw = os.path.join(scratch, "raw_data", *tile.split("/"))
+    rules_up = []
+    parts = tile.split("/")
+    for i in range(len(parts)):
+        rules = os.path.join(kit, "raw_data", *parts[:i], "rules.bob")
+        if os.path.isfile(rules):
+            out = os.path.join(scratch, "raw_data", *parts[:i], "rules.bob")
+            os.makedirs(os.path.dirname(out), exist_ok=True)
+            shutil.copy2(rules, out)
+    if os.path.isdir(dst_raw):
+        shutil.rmtree(dst_raw)
+    os.makedirs(dst_raw)
+    consumers = []
+    for name in TILE_RAW_FILES:
+        f = os.path.join(src_raw, name)
+        if os.path.isfile(f):
+            shutil.copy2(f, os.path.join(dst_raw, name))
+            consumers.append(f"<raw>/{tile}/{name}")
+    if "tile.ted" not in [c.rsplit("/", 1)[-1] for c in consumers]:
+        raise BobError("the tile has no tile.ted")
+    ns = argparse.Namespace(kit=scratch, exe=None, name="toolkit_build_tile", processor=["Tile", "Vegetation", "Battle"],
+                            directory=["<raw>/terrain/tiles/battle/", "<working>/terrain/vegetation/"], consumer=consumers,
+                            provider=[], retail=False, scan_perforce=False, temp_rules=[], timeout=args.timeout, tail=20,
+                            dry_run=False, allow_outside_raw=True)
+    code = cmd_run(ns)
+    if code != 0:
+        return code
+    produced = os.path.join(scratch, "working_data", *tile.split("/"))
+    out_root = os.path.abspath(args.out) if args.out else os.path.join(kit, "working_data")
+    out_dir = os.path.join(out_root, *tile.split("/"))
+    os.makedirs(out_dir, exist_ok=True)
+    n = 0
+    for name in sorted(os.listdir(produced)):
+        shutil.copy2(os.path.join(produced, name), os.path.join(out_dir, name))
+        n += 1
+    print(f"copied {n} files to {out_dir}")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -369,6 +428,12 @@ def main(argv=None):
     p.add_argument("--dry-run", action="store_true", help="print the configuration and stop")
     p.add_argument("--allow-outside-raw", action="store_true")
     p.set_defaults(fn=cmd_run)
+    p = sub.add_parser("build-tile", help="build one battle tile's working data with BOB in a scratch kit")
+    p.add_argument("--kit"); p.add_argument("--tile", required=True, help="e.g. terrain/tiles/battle/<set>/<size>/<variation>")
+    p.add_argument("--scratch", required=True, help="scratch kit folder (created on first use, reused later)")
+    p.add_argument("--out", help="where to put the outputs (a working_data root); default: the kit's working_data")
+    p.add_argument("--timeout", type=int, default=900)
+    p.set_defaults(fn=cmd_build_tile)
     p = sub.add_parser("scratch")
     p.add_argument("--dest", required=True); p.add_argument("--kit")
     p.add_argument("--tile-deps", action="store_true",

@@ -9,6 +9,16 @@ Everything here was verified by disassembly or runtime memory on 2026-10-03, aga
 - Runtime facts (what the game actually loaded): a FULL dump (2–3 GB) holds the whole heap. Find a known key string, then follow the pointers back to the object (see `dump_cai_personalities.py`). A "no heap" dump only has stacks.
 - No WinDbg or cdb is installed; `minidump.py` covers what was needed. Visual Studio can also open a `.dmp`, but it needs symbols that do not exist.
 
+## Lua glue: wrappers, type checks and the poisoned state (build 2026-04-02)
+
+- Every engine method thunk first maps the calling `lua_State` to its C++ wrapper with `+16263a0`: push `"lookup"`, read it from globals (`LUA_GLOBALSINDEX`), index it with the state as light userdata. `_G.lookup` is a weak-keyed table with one entry per state (3 in a campaign).
+- Pushes go through helpers such as `+6bfc30` -> `+16243a0` that **skip the push when byte `+4` of the wrapper is 0** and still return 1, so the Lua call returns whatever is on top of the stack (seen: the method function itself).
+- Argument readers (`+1624050`, `+16240b0`, `+16241f0`, ...) check `lua_type`; on a mismatch they call `+1651800` (`Trying to retrieve type %s, found type %s`, codes 3/4/5) and **clear wrapper byte `+4`**. No Lua error is raised; the flag stays cleared for the rest of the event, so every later engine call silently misbehaves and writes through bad pointers.
+- `string.find` is the engine's C function `+16278d0`; its 4th argument is read as a string, so the standard `plain = true` flag triggers the above.
+- Lua build: 4-byte float numbers, 8-byte `TValue` (`value`, `tt`). `lua_State`: `top +8`, `base +12`, `l_G +16`, `ci +20`, `savedpc +24`, `stack_last +28`, `stack +32`, `end_ci +36`, `base_ci +40`, `stacksize +44`. `CallInfo` is 24 bytes (`base, func, top, savedpc, nresults, tailcalls`). Closure: `isC` byte `+6`, C function / `Proto*` at `+16`. Proto: `code +12`, `lineinfo +20`, `source +32` (TString: length `+12`, chars `+16`), `linedefined +60`. The C-call return address of `luaD_precall` is `+12ca80e`; the word after it on the native stack is the `lua_State`. `attila_live.py` walks these live.
+- Event objects name themselves through a vfunc of the form `mov eax, "<EventName>"; ret` (e.g. the `CharacterCreated` vtable `+1b5f5a0`, `ModelCreated` `+1b69084`); `attila_live.py` lists them from the stack.
+- Model methods (`turn_number`, `difficulty_level`, `world`, ...) are registered from a table of `{name, ..., function}` entries around `+1d2c8b8` (5 dwords per entry).
+
 ## Crash: CDIR region religion condition with no campaign region (end turn)
 
 Signature: `c0000005` read of address `0x354` with `esi=0`, at `+716ee0`. The first return address on the stack is `+8fc2a5`, inside the region religion predicate at `+8fc290`.

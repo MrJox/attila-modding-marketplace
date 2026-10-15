@@ -1,6 +1,6 @@
 ---
 name: attila-lua-scripting
-description: Write, review and debug Total War Attila campaign and battle Lua (campaign_manager `cm`, event listeners, saving values, triggering dilemmas/incidents/missions, the script libraries in script/_lib). Includes a static checker (syntax, unknown API/method names, unknown event names, DB key literals) that needs no game run, and the engine facts that decide how bad a Lua mistake is. Use when a mod's Lua errors, an event listener never fires, a save/load loses state, or before shipping Lua changes.
+description: Write, review and debug Total War Attila campaign and battle Lua (campaign_manager `cm`, event listeners, saving values, triggering dilemmas/incidents/missions, the script libraries in script/_lib). Includes a static checker (syntax, unknown API/method names, unknown event names, DB key literals, arguments the engine rejects) that needs no game run, and the engine facts that decide how bad a Lua mistake is. Use when a mod's Lua errors, an event listener never fires, a save/load loses state, engine calls start returning nonsense (a function where a number is expected), the campaign crashes soon after a script ran, or before shipping Lua changes.
 ---
 
 # Attila Lua
@@ -20,6 +20,9 @@ Shared setup and scripts: `attila-modding`. Pack editing: `attila-rpfm`. Facts b
 - **Saved values are bool, number or string only.** `cm:save_value(name, value, context)` goes to `save_named_value`; tables cannot be saved. Scripts serialise tables to strings themselves (vanilla has `cm:load_values_from_string` to read them back). Save inside the saving callback, read inside the loading callback; the `context` is the one passed to the callback.
 - **Null interfaces are a distinct type** (`NULL_SCRIPT_INTERFACE`): always test `obj:is_null_interface()` (vanilla: `if faction:is_null_interface() == false and ...`) before using `owning_faction()` of desolate regions, a missing character, etc.
 - **Unknown API names fail only when executed.** The engine exposes its interfaces from the DLL; a typo is a runtime error on that path only, so a rarely hit branch can hide it for months. Use the checker below.
+- **A wrong argument type to an engine function poisons the whole event.** Engine functions read their arguments with type checks; on a mismatch the engine logs `Trying to retrieve type %s, found type %s` (Empire.Retail.dll `+1651800`) and clears the valid flag of the Lua state's wrapper (looked up via the global table `lookup[lua_State]`). It raises **no Lua error**. For the rest of that event every engine call silently misbehaves: getters push nothing, so `x:num_items()` or `cm:model():turn_number()` return a *function* (the method itself) instead of a number, and calls that write go through bad pointers and corrupt the campaign model. The game then crashes later in unrelated code (seen: the next `CharacterCreated` in vanilla `export_triggers.lua`, see `attila-crash-dump`). If engine calls start returning functions or garbage mid-event, look for a wrong-typed argument to *any* engine call earlier in the same event.
+- **`string.find` is the engine's own, not stock Lua 5.1.** It rejects the fourth ("plain") argument: `string.find(s, "_rebel", 1, true)` (or `s:find(p, 1, true)`) triggers exactly the poisoning above. Use the 2- or 3-argument form and escape magic characters (`%.`, `%-`, ...) instead. The checker flags 4-argument `find` calls.
+- **Lua numbers are 4-byte floats** in this build (8-byte `TValue`): integers above 16 777 216 lose precision (cqis, large treasuries in arithmetic).
 - **Event names are DLL strings.** `cm:add_listener(name, "EventName", condition, callback, persistent)` with an unknown event name never fires and reports nothing.
 - **Keys in Lua must exist in the DB**: faction, region, building, unit, bundle, trait, dilemma/incident/mission keys, loc keys. A wrong key does nothing or logs a script error; for dilemma/incident triggers it can crash the end turn.
 - Numbers: `.` decimal separator everywhere (also in DB TSV).
@@ -42,6 +45,7 @@ Sections of the report:
 | Unknown method/function names | `obj:name(` / `obj.name(` where `name` is in no DLL string, vanilla Lua or mod Lua | engine UI methods implemented outside the DLL string table (`Id`), loop variables used as tables (`i`) |
 | Unknown event names | `add_listener(..., "Event", ...)` with an event the DLL does not know | none seen |
 | Key literals | string starting with a `--keys` prefix that is no cell in any extracted DB table or loc | keys built by concatenation (literals ending `_` are skipped), keys defined by a startpos not extracted, debug-only lists |
+| Arguments the engine rejects | `string.find(s, p, init, plain)` / `s:find(p, init, plain)`: the game's `string.find` rejects the 4th argument and the event's script state is poisoned (see the rules above) | none: always fix |
 
 Judge every finding by reading the call site; the tool is a filter, not a verdict. For deeper API questions read the DLL: `python ../../attila-modding/scripts/pedis.py str <name>` finds the code that registers a method name.
 
@@ -49,4 +53,5 @@ Judge every finding by reading the call site; the tool is a filter, not a verdic
 
 - Script output goes through `output()` / `out()` and `script_error()` into the console log; engine asserts go to `%APPDATA%\The Creative Assembly\Attila\console_spools\*.txt` (UTF-16). Mods with their own logger write next to the game (TDD: `tdd.log.txt`).
 - A crash at end turn after an event fired: take the dump to `attila-crash-dump`; data-side event conditions are in `attila-cdir-events`.
+- To see the exact Lua line that passed a wrong-typed argument, run the game under `../attila-modding/scripts/attila_live.py --bp 1651800` (see `attila-crash-dump`, "Live capture"): it stops on the engine's type-check report and prints the Lua call stack with file:line.
 - RPFM's built-in Lua diagnostics and `lua_run_tests` target newer Total War APIs; they were not verified against Attila's Lua API, so do not treat a clean result from them as proof.

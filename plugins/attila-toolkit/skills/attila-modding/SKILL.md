@@ -71,6 +71,7 @@ Several versions of each pack usually sit in `data\` (e.g. `..._1.1.0.9.pack`, `
 | `esf_strings.py` | Keys from ESF files; `--compare` = map regions vs startpos vs regions table |
 | `pedis.py` | Disassemble / cross-reference `empire.retail.dll`: `dis`, `fn`, `ret`, `callers`, `str`, `float`, `strings` (needs `capstone`) |
 | `minidump.py` | Crash dump summary: exception, registers, stack, strings near the stack |
+| `attila_live.py` | Live crash capture: debugger attached to a newly started `Attila.exe`; Lua frames as file:line, engine event objects, full dump; `--bp 1651800` logs wrong-typed arguments to engine functions (see `attila-crash-dump`, Windows only) |
 | `dump_cai_personalities.py` | Runtime AI personality of every faction from a full dump |
 | `cdir_engine.py`, `audit_cdir.py` | Incidents / dilemmas / missions audit |
 | `audit_cai.py` | Campaign AI audit |

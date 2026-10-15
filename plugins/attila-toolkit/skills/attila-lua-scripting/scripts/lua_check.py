@@ -15,6 +15,9 @@ Checks
   keys     string literals that start with one of --keys prefixes (and do not end in `_`, i.e. are not
            half a key that the code completes) exist as a cell in some DB table
            (needs `python extract.py` for the mod and vanilla tables)
+  args     calls the engine rejects at run time: string.find(s, p, init, plain) / s:find(p, init, plain).
+           The game's string.find is CA's own and rejects the 4th argument; the failed type check poisons the
+           Lua state for the rest of the event (engine calls return garbage, the campaign crashes later)
 
 Needs `pip install luaparser`. Work folder layout comes from extract.py (<work>/tdd, <work>/van, <work>/sp).
 """
@@ -139,10 +142,13 @@ def main():
         prefixes = ()
 
     own = identifiers_in(files)
-    unknown_api, unknown_ev, unknown_keys = {}, {}, {}
+    unknown_api, unknown_ev, unknown_keys, bad_args = {}, {}, {}, {}
     for f, tree in trees.items():
         rel = os.path.relpath(f, roots[0])
         for kind, name, line, node in walk_calls(tree):
+            # string.find / s:find with a 4th (plain) argument: rejected by the engine's string.find
+            if name == "find" and len(node.args) + (1 if kind == "method" else 0) >= 4:
+                bad_args.setdefault("find() with a 4th (plain) argument", []).append("%s:%s" % (rel, line))
             # a name defined only by the mod itself is fine; the DLL / vanilla Lua must know engine calls
             if name not in known:
                 unknown_api.setdefault(name, []).append("%s:%s" % (rel, line))
@@ -165,7 +171,8 @@ def main():
     section("Unknown event names in add_listener", unknown_ev)
     if prefixes:
         section("Key literals (%s) found in no DB table or loc" % ",".join(prefixes), unknown_keys)
-    return finish(a, lines, bad + len(unknown_api) + len(unknown_ev) + len(unknown_keys))
+    section("Arguments the engine rejects (fix all)", bad_args)
+    return finish(a, lines, bad + len(unknown_api) + len(unknown_ev) + len(unknown_keys) + len(bad_args))
 
 
 def finish(a, lines, problems):
