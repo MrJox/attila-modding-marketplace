@@ -1,11 +1,22 @@
 {
   "name": "attila-toolkit",
   "displayName": "Total War: Attila Modding Toolkit",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Total War: Attila modding: RPFM pack editing through rpfm_server's MCP (auto-started), DB/loc/Lua/startpos knowledge, audits for campaign events, AI and battle tiles, crash-dump analysis, file format specs, the engine type header and a BOB (Assembly Kit processor) command-line skill.",
-  "author": { "name": "Mr.Jox aka victimized" },
+  "author": {
+    "name": "Mr.Jox aka victimized"
+  },
   "license": "MIT",
-  "keywords": ["total-war", "attila", "rpfm", "modding", "tdd", "dawnless-days", "bob", "assembly-kit"],
+  "keywords": [
+    "total-war",
+    "attila",
+    "rpfm",
+    "modding",
+    "tdd",
+    "dawnless-days",
+    "bob",
+    "assembly-kit"
+  ],
   "userConfig": {
     "attila_dir": {
       "type": "directory",
@@ -32,6 +43,11 @@
       "title": "Start rpfm_server automatically",
       "description": "Launch rpfm_server in the background when the RPFM MCP is used, and stop it when the last session ends (only if the toolkit started it).",
       "default": true
+    },
+    "wce_ui_path": {
+      "type": "string",
+      "title": "wce-ui executable (optional)",
+      "description": "Full path of wce-ui(.exe), the UI layout editor's command line and MCP server from the Warscape Community Editor. Blank = look in this plugin's bin folder and on PATH."
     }
   }
 }
