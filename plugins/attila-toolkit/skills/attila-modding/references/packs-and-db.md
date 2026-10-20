@@ -39,7 +39,7 @@ The text columns inside DB tables (e.g. `dilemmas.localised_title` = "Placeholde
 ## Startpos and map files
 
 - `start_pos_*` DB tables (in `startpos_war_of_the_ring.pack`) are the Assembly Kit inputs; the game reads the compiled `campaigns/main_attila_map/startpos.esf` from pack 1. Key columns of `start_pos_factions`: `faction`, `playable`, `cai_personality_group`, `cai_starting_personality`, `ai_manager`, `cdir_military_generator_config`.
-- `startpos.esf` is a CAAB ESF: the bulk (factions, AI, characters) is LZMA-compressed inside a `COMPRESSED_DATA` node and was not decoded; the uncompressed part holds map preview data with region keys. For runtime facts use a full crash dump.
+- `startpos.esf` and save games are CAAB ESF: the bulk (factions, AI, characters) is LZMA-compressed inside a `COMPRESSED_DATA` node; the uncompressed part holds map preview data with region keys. `esf_read.py` (skill `attila-esf`) unpacks and parses both.
 - ESF strings are length-prefixed (u16) ASCII or UTF-16; `esf_strings.py` reads them.
 - TDD map (`map_data.esf`): 206 land regions + 10 sea regions (`rom_sea_*`, including `rom_sea_anduin_river`, `rom_sea_lake`); only 156 regions are in the startpos. The other 50 (Eriador, Shire, Lindon, Fangorn, Forochel, `rom_reg_unknown` ...) exist on the map but have no campaign REGION at runtime.
 

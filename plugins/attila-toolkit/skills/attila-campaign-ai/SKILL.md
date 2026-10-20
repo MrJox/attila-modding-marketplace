@@ -33,11 +33,11 @@ python refcheck.py "cai_*" "campaign_ai_*" "cdir_military_*"     # plain broken 
 
 The personality a faction runs comes from three sources, applied in order:
 
-1. `start_pos_factions` in `startpos_war_of_the_ring.pack`: `cai_personality_group`, `cai_starting_personality`. These are the Assembly Kit source tables. The compiled `startpos.esf` in pack 1 is what the game reads, but its AI part is LZMA-compressed and was not decoded.
+1. `start_pos_factions` in `startpos_war_of_the_ring.pack`: `cai_personality_group`, `cai_starting_personality`. These are the Assembly Kit source tables. The compiled `startpos.esf` in pack 1 is what the game reads; `esf_read.py <startpos.esf> ai` (skill `attila-esf`) shows the group compiled into it.
 2. `cai_personality_group_overrides` (can replace the group).
 3. Lua `force_change_cai_faction_personality(faction, personality)` in `campaigns/main_attila_map/` (`configure_ai_factions.lua`, `events/*.lua`). Check that the function is actually called and that the key exists.
 
-Only runtime memory proves the result:
+Only runtime state proves the result. With a save, `python esf_read.py "<file.save>" ai` (skill `attila-esf`) prints faction → personality → group in seconds. Without one, use a full dump:
 
 ```bash
 python dump_cai_personalities.py "<full dump.dmp>"

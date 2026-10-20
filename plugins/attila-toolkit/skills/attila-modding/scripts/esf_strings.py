@@ -5,9 +5,9 @@
 
 ESF strings are length-prefixed (u16 length, then ASCII or UTF-16), not NUL-terminated, so
 a plain regex picks up a trailing byte ("..._dale9"). This reads the prefix instead.
-Limitation: TDD's startpos.esf is a CAAB file whose bulk (factions, AI, characters) is
-LZMA-compressed in a COMPRESSED_DATA node; only the uncompressed part (map preview data,
-region keys) is visible here. For runtime facts (AI personalities etc.) use a full crash dump.
+Limitation: TDD's startpos.esf and saves are CAAB files whose bulk (factions, AI, characters)
+is LZMA-compressed in a COMPRESSED_DATA node; only the uncompressed part (map preview data,
+region keys) is visible here. Use esf_read.py for the full content.
 """
 import glob
 import os

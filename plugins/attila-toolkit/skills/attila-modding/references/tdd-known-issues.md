@@ -78,7 +78,13 @@ The TDD handover doc (walls, building levels, tile upgrades) is not shipped; `at
 - `rom_reg_upper_vales_beorgstad` (id 2130453444): only `rom_rel_power_of_shadow 15`; the `rom_rel_northmen_kingdoms 85` row its Upper Vales neighbours have is missing.
 - Cosmetic: the Minas Tirith settlement key is `settlement:rom_reg_anorien_minas_tirth` (typo), but it's consistent in startpos, `campaign_map_settlements` and loc, and no Lua uses the settlement key.
 - The startpos still names the generic minor groups for those factions, but the overrides take precedence, so this has no effect. The 50 map-only regions (Map section) are still open.
-- Table fixes only reach the game after re-exporting `startpos.esf` with the Assembly Kit; the compressed part of the ESF can't be checked here.
+- Table fixes only reach the game after re-exporting `startpos.esf` with the Assembly Kit. Check the compiled file with `esf_read.py` (skill `attila-esf`).
+
+## Separatists (1.1.0-rc2, 2026-10-20)
+
+- `rom_fact_separatist_gundabad` cannot recruit: every unit row of the normal `rom_gun_*` buildings (and `rom_settlement_gundabad_1`) in `building_units_allowed` names `rom_fact_gundabad`, `rom_fact_ered_mithrin_orcs` or `rom_fact_goblins` in the `faction` column. It is also missing from `building_chain_availabilities`, `building_culture_variants`, `technology_node_sets` and `character_skill_node_sets`, which are all assigned per faction for that culture. Confirmed from a turn-14 save: it held Mount Gundabad with 20,357 gold, and one of its 3 armies was a general alone.
+- `rom_fact_separatist_harad`'s only land general unit `har_serpent_guards` is exclusive to `rom_fact_harad` (`units_to_exclusive_faction_permissions`).
+- The other Easterling and Southron separatists match their parents in every recruitment-related table.
 
 ## Map
 

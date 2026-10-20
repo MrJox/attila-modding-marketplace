@@ -50,7 +50,7 @@ Signature: `c0000005` read of address `0x354` with `esi=0`, at `+716ee0`. The fi
 
 - `cai_personality_group_overrides` beats the startpos group (verified 2026-10-05). `c72cb0` (called from `919054`) skips overrides only when `[FACTION+0x800]` (faction record) is null, i.e. the generic rebels (`716690`). Otherwise it loops over the override rows and, on matching campaign + faction key + `difficulty_handicap`, sets the group (`[this+0x24]`, key at `+0x14`) before the personality is chosen (`c1fd80`). The handicap is `[FACTION+0x850]`, negated when the byte at `+0x84c` is false; vanilla's `_hard` groups on -1/-2/-3 show negative = harder for the AI, so rows -3..1 cover every difficulty.
 - The effective personality is the startpos assignment (`start_pos_factions.cai_personality_group` / `cai_starting_personality`), changed by `cai_personality_group_overrides` and by Lua `force_change_cai_faction_personality`. Only a full dump shows the result: `dump_cai_personalities.py`.
-- In TDD the compiled `startpos.esf` was not decodable (LZMA bulk), so the dump was the proof. In the 2026-10-03 save, Gundabad and Dol Guldur ran `rom_orcs_minor_rebels`, and Umbar, Mahuds and Harondor ran `rom_southrons_minor_rebels`.
+- The compiled `startpos.esf` and saves can now be read with `esf_read.py` (skill `attila-esf`); at the time the dump was the proof. In the 2026-10-03 save, Gundabad and Dol Guldur ran `rom_orcs_minor_rebels`, and Umbar, Mahuds and Harondor ran `rom_southrons_minor_rebels`.
 
 ## Battle tile upgrades
 

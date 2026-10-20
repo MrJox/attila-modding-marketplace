@@ -69,6 +69,7 @@ Several versions of each pack usually sit in `data\` (e.g. `..._1.1.0.9.pack`, `
 | `dbtables.py` | `rows(table, src=None)`, `keys(table, col)`, `loc_keys()`, `references(table, version)` from the RPFM schema |
 | `refcheck.py` | Unresolved references in any mod table: `python refcheck.py "cai_*" "cdir_*"` |
 | `esf_strings.py` | Keys from ESF files; `--compare` = map regions vs startpos vs regions table |
+| `esf_read.py` | Full ESF/save parser (unpacks COMPRESSED_DATA): factions, armies, regions, buildings, AI personalities, tree/grep (skill `attila-esf`) |
 | `pedis.py` | Disassemble / cross-reference `empire.retail.dll`: `dis`, `fn`, `ret`, `callers`, `str`, `float`, `strings` (needs `capstone`) |
 | `minidump.py` | Crash dump summary: exception, registers, stack, strings near the stack |
 | `attila_live.py` | Live crash capture: debugger attached to a newly started `Attila.exe`; Lua frames as file:line, engine event objects, full dump; `--bp 1651800` logs wrong-typed arguments to engine functions (see `attila-crash-dump`, Windows only) |
