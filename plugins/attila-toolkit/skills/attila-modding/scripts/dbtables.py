@@ -74,9 +74,11 @@ def loc_keys(src=None):
     ks = set()
     for s in ([src] if src else ["tdd", "van"]):
         for p in glob.glob(os.path.join(work(SRC[s], mkdir=False), "text", "**", "*.tsv"), recursive=True):
-            for r in list(csv.reader(open(p, encoding="utf-8"), delimiter="\t"))[2:]:
-                if r:
-                    ks.add(r[0])
+            # split lines by hand: loc text holds unbalanced quotes, which make csv.reader swallow rows
+            for line in open(p, encoding="utf-8").read().split("\n")[2:]:
+                k = line.split("\t", 1)[0].strip()
+                if k:
+                    ks.add(k)
     return ks
 
 

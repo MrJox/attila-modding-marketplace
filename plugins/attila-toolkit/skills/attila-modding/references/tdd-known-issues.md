@@ -86,6 +86,17 @@ The TDD handover doc (walls, building levels, tile upgrades) is not shipped; `at
 - `rom_fact_separatist_harad`'s only land general unit `har_serpent_guards` is exclusive to `rom_fact_harad` (`units_to_exclusive_faction_permissions`).
 - The other Easterling and Southron separatists match their parents in every recruitment-related table.
 
+## Skills, technologies, agents (1.1.0-rc3-prebuild, 2026-10-22; all already in rc2)
+
+From `audit_skills.py` / `audit_tech.py` / `audit_agents.py` (skill `attila-progression-audit`):
+- Dale general followers (`rom_general_follower_dale_*`, also used by every `rom_sc_middle_men` general) have no `character_skill_level_details` rows; the 8 `rom_general_follower_orcs_*` have level rows 0 and 2 instead of 1 and 2.
+- `rom_agent_follower_mor_dark_rider` and `rom_agent_follower_spy_gundabad_spymaster` L2 enable Disruption with `agent_to_agent_action_passive` (the action is `hinder_province`).
+- L2 drops an L1 effect: all spy `*_prudence` (`att_effect_agent_action_success_chance_enemy`), evil `*_cutthroat` (assassinate buff) and `*_rogue` (assault buff).
+- `rom_lor_fading_technology_effects_junction` and `rom_lor_technology_effects_junction` both define the tax effect of 3 Fading techs (-3 vs -25).
+- AI never researches `rom_dal_mil_marching_drills`, `rom_ere_civil_mining_galleries`, `rom_est_civil_assimilation_expansion` and the Wildmen `*_wildmen` techs; TDD's manager/path junction file collides with vanilla's rows (different priorities).
+- Startpos gives `rom_fact_goblins` Mordor's roots (`rom_mor_civil_orc_societies`, `rom_mor_mil_rapid_mobilisation`) instead of `rom_gun_*` roots and legacy techs.
+- `rom_agent_to_agent_attributes` overrides only some vanilla rows: dignitary starts with zeal 2 above authority 1.
+
 ## Map
 
 50 land regions are on the map but not in the startpos. Sea regions also have no campaign region. Any CDIR or Lua code that reads a region's owner, religion or settlement must guard against both.

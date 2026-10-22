@@ -53,6 +53,7 @@ Resolution order for every path: environment variable (`ATTILA_DIR`, `RPFM_DIR`,
 | `attila-lua-scripting` | Campaign/battle Lua: load order, listener and save/load rules, static checker (`lua_check.py`) |
 | `attila-cdir-events` | Incidents, dilemmas, missions (campaign director) audit and engine rules |
 | `attila-campaign-ai` | Campaign AI personalities, task management, budget, construction, military generator audit |
+| `attila-progression-audit` | Skills, followers, army/navy traditions, technologies + AI research paths, agents: upgrade losses/downgrades, scopes, levels, links, start techs, attributes, actions (`audit_skills.py`, `audit_tech.py`, `audit_agents.py`) |
 | `attila-tile-upgrades` | Settlement battle tiles by building level, walls |
 | `attila-battle-terrain` | tile_map, LF height map, environment/lighting/shader formats |
 | `attila-crash-dump` | Find crash causes from `.dmp` files without WinDbg; known signatures |

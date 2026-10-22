@@ -1,6 +1,6 @@
 ---
 name: attila-modding
-description: Base setup and knowledge for Total War Attila modding (and The Dawnless Days, TDD). Where the game, mod packs, RPFM and its schema, logs and crash dumps are (resolved from the toolkit config, never hard-coded); how packs and DB tables load and merge; engine facts; and the shared Python scripts (extract packs to TSV, load tables with the game's merge rules, check references, disassemble empire.retail.dll, read crash dumps). Use for any Attila task that touches packs, DB tables, loc, Lua, battle tiles, crashes or the engine; the topic skills attila-rpfm, attila-lua-scripting, attila-crash-dump, attila-cdir-events, attila-campaign-ai, attila-tile-upgrades, attila-battle-terrain, attila-file-formats, attila-engine-header and attila-bob-cli build on it.
+description: Base setup and knowledge for Total War Attila modding (and The Dawnless Days, TDD). Where the game, mod packs, RPFM and its schema, logs and crash dumps are (resolved from the toolkit config, never hard-coded); how packs and DB tables load and merge; engine facts; and the shared Python scripts (extract packs to TSV, load tables with the game's merge rules, check references, disassemble empire.retail.dll, read crash dumps). Use for any Attila task that touches packs, DB tables, loc, Lua, battle tiles, crashes or the engine; the topic skills attila-rpfm, attila-lua-scripting, attila-crash-dump, attila-cdir-events, attila-campaign-ai, attila-progression-audit, attila-tile-upgrades, attila-battle-terrain, attila-file-formats, attila-engine-header and attila-bob-cli build on it.
 ---
 
 # Attila modding: base
@@ -76,6 +76,7 @@ Several versions of each pack usually sit in `data\` (e.g. `..._1.1.0.9.pack`, `
 | `dump_cai_personalities.py` | Runtime AI personality of every faction from a full dump |
 | `cdir_engine.py`, `audit_cdir.py` | Incidents / dilemmas / missions audit |
 | `audit_cai.py` | Campaign AI audit |
+| `audit_skills.py`, `audit_tech.py`, `audit_agents.py` | Skills/followers/traditions, technologies + AI research, agents (skill `attila-progression-audit`) |
 | `check_tile_upgrades.py` | `tile_upgrades.xml` + wall effects + building levels |
 
 Optional Python packages: `capstone`, `numpy`, `luaparser` (`python configure.py install-deps`).
